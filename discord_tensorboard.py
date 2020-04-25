@@ -14,8 +14,9 @@ parser.add_argument("--logdir", type=str, required=True)
 parser.add_argument("--channel", type=str, required=True)
 parser.add_argument("--start", type=int, default=0, required=False)
 parser.add_argument("--end", type=int, required=False)
-parser.add_argument("--waitsec", default=60, type=int, required=False)
-parser.add_argument("--warnsec", default=1800, type=int, required=False)
+parser.add_argument("--waitsec", default=240, type=int, required=False)
+parser.add_argument("--warnsec", default=3600, type=int, required=False)
+parser.add_argument("--logstart", default=None, type=str, required=False)
 args = parser.parse_args()
 discord_token = os.environ['DISCORD_TOKEN']
 
@@ -50,9 +51,13 @@ async def send_picture(channel, img, kind='png', name='test', text=None):
     picture.filename = name + '.' + kind
     await channel.send(content=text, file=picture)
 
-def get_images(event_acc, name='fake_images_image_0'):
+def get_images(event_acc=None, name='fake_images_image_0'):
+  if event_acc is None:
+    print("Loading event accumulator for {}".format(args.logdir))
+    event_acc = event_accumulator.EventAccumulator(args.logdir, size_guidance={'images': 0})
   print("Reloading event accumulator for {}".format(args.logdir))
   event_acc.Reload()
+  print("Finished loading event accumulator for {}".format(args.logdir))
   for tag in event_acc.Tags()['images']:
       events = event_acc.Images(tag)
 
@@ -70,9 +75,10 @@ def bot(channel_name, name='test', kind='png'):
     client = discord.Client()
     token = discord_token
 
-    print("Loading event accumulator")
-    event_acc = event_accumulator.EventAccumulator(args.logdir, size_guidance={'images': 0})
-    event_acc.Reload() # preload
+    #print("Loading event accumulator")
+    #event_acc = event_accumulator.EventAccumulator(args.logdir, size_guidance={'images': 0})
+    #event_acc.Reload() # preload
+    event_acc = None
 
     @client.event
     async def on_ready():
@@ -108,14 +114,21 @@ def bot(channel_name, name='test', kind='png'):
 
               now = utc()
               if args.warnsec is not None and now - lastevent > args.warnsec and now - warnevent > args.warnsec:
-                  await send_message(channel, text="I've fallen and I can't get up. Please send help. Last event was {} seconds ago.".format(now - lastevent))
+                  await send_message(channel, text="I've fallen and I can't get up. Please send help. Last event was {:.2f}m ago.".format((now - lastevent)/60.0))
                   warnevent = now
 
-              if args.waitsec is not None:
+              if args.waitsec is not None and args.waitsec > 0:
                   print("Sleeping for {} secs".format(args.waitsec))
                   time.sleep(args.waitsec)
               else:
                   print("Done. Bye!")
+                  print("--start {}".format(args.start))
+                  if args.logstart is not None:
+                    with open(args.logstart, "w") as f:
+                      f.write(str(args.start))
+                  import posix
+                  posix._exit(args.start)
+                  assert False
                   break
         except:
           import traceback
