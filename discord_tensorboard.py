@@ -244,10 +244,9 @@ def bot(channel_name, name='test', kind='png'):
     client = discord.Client()
     token = discord_token
 
-    #print("Loading event accumulator")
-    #event_acc = event_accumulator.EventAccumulator(args.logdir, size_guidance={'images': 0})
-    #event_acc.Reload() # preload
-    event_acc = None
+    print("Loading event accumulator")
+    event_acc = event_accumulator.EventAccumulator(args.logdir, size_guidance={'images': 0})
+    event_acc.Reload() # preload
 
     @client.event
     async def on_ready():
@@ -260,14 +259,7 @@ def bot(channel_name, name='test', kind='png'):
           import time
 
           warnevent = 0.0
-          event_acc = None
           while True:
-              if event_acc is None:
-                  print("Loading event accumulator for {}".format(args.logdir))
-                  event_acc = event_accumulator.EventAccumulator(args.logdir, size_guidance={'images': 0})
-              print("Reloading event accumulator for {}".format(args.logdir))
-              event_acc.Reload()
-              print("Finished loading event accumulator for {}".format(args.logdir))
               results = list(sorted([(index, image, event) for index, image, event in get_images(event_acc)]))
 
               lastevent = utc()
@@ -298,7 +290,7 @@ def bot(channel_name, name='test', kind='png'):
 
               if args.waitsec is not None and args.waitsec > 0:
                   print("Sleeping for {} secs".format(args.waitsec))
-                  time.sleep(args.waitsec)
+                  await asyncio.sleep(args.waitsec)
               else:
                   print("Done. Bye!")
                   print("--start {}".format(args.start))
