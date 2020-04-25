@@ -238,7 +238,7 @@ async def send_picture(channel, img, kind='jpg', name='test', text=None):
         quality = int(quality)
       else:
         quality = 95
-      img.save(f, kind, 'JPEG', quality=quality)
+      img.save(f, 'JPEG', quality=quality)
     else:
       img.save(f, kind)
     f.seek(0)
