@@ -38,89 +38,6 @@ os.environ["TZ"] = "US/Pacific"
 def timestamp(utc_seconds):
     return time.strftime("%Y-%m-%d %H:%M:%S PST", time.localtime(utc_seconds))
 
-async def send_message(channel, text):
-    print("Posting message to {}: {}".format(channel.name, text))
-    await channel.send(content=text)
-
-async def send_picture(channel, img, kind='png', name='test', text=None):
-    print("Posting picture to {} with text {}".format(channel.name, text))
-    f = io.BytesIO()
-    img.save(f, kind)
-    f.seek(0)
-    picture = discord.File(f)
-    picture.filename = name + '.' + kind
-    await channel.send(content=text, file=picture)
-
-def _get_tensors(event_acc, names):
-  if not isinstance(names, list):
-    names = [names]
-  tags = event_acc.Tags()
-  for tensor in tags.get('tensors', []):
-    if tensor in names:
-      for event in event_acc.tensors.Items(tensor):
-        props = dict([(k.name, v) for k, v in event.tensor_proto.ListFields()])
-        props['event'] = event
-        props['tensor'] = tensor
-        yield props
-
-def get_tensors(event_acc, names=['gin/operative_config'], step=None):
-  results = list(sorted(_get_tensors(event_acc, names), key=lambda x: x['event'].step))
-  if step is not None and len(results) > 0:
-    best = None
-    for result in results:
-      if best is None:
-        best = result
-      if result['event'].step <= step:
-        if result['event'].step >= best['event'].step:
-          best = result
-    return best
-  return results
-
-def get_string_val(x, unset=None):
-  if x is None:
-    return unset
-  return x['string_val'][0].decode('utf8')
-
-def get_config(event_acc, step, description=None, match=None, exclude=None):
-  result = get_tensors(event_acc, 'gin/operative_config', step=step)
-  if result is None:
-    return None
-  cfg = get_string_val(result)
-  if cfg is None:
-    cfg = "No config"
-  cfg = cfg.replace('\r', '').replace('\\\n        ', '')
-  cfg = "*config.changed_at_step = {}\n{}".format(result['event'].step, cfg)
-  if match is not None:
-    if exclude is None:
-      exclude = []
-    if not isinstance(match, list):
-      match = [match]
-    if not isinstance(exclude, list):
-      exclude = [exclude]
-    cfg = '\n'.join([x for x in cfg.splitlines() if any([x.lstrip().startswith(y) for y in match]) and not any([x.lstrip().startswith(y) for y in exclude])])
-    return cfg
-  if description is not None:
-    description = " " + description
-  else:
-    description = ""
-  cfg = "{} at step {}{}\n{}".format(result['tensor'], result['event'].step, description, cfg)
-  return cfg
-
-def get_settings(event_acc, step):
-  return [x.strip().split(' = ', 1) for x in get_config(event_acc, step=step, match='', exclude=''.split()).splitlines() if not x.strip().startswith('#') and len(x.strip()) > 0]
-
-def get_settings_diff(event_acc, step, exclude=biggan_defaults):
-  return [(k, v) for k, v in get_settings(event_acc, step) if exclude.get(k) != v or k.startswith('*')]
-
-import json
-
-def get_description(event_acc, step):
-  #result = get_config(event_acc, step=step, match='options', exclude='options.image_ options.transpose_input options.training_steps'.split())
-  result = get_settings_diff(event_acc, step)
-  if result is None:
-    return ""
-  return json.dumps(dict(result))
-
 biggan_defaults = dict([
  ['AdamOptimizer.beta1', '0.0'],
  ['AdamOptimizer.beta2', '0.999'],
@@ -206,6 +123,75 @@ biggan_defaults = dict([
  ['z.stddev', '1.0']
  ])
 
+def _get_tensors(event_acc, names):
+  if not isinstance(names, list):
+    names = [names]
+  tags = event_acc.Tags()
+  for tensor in tags.get('tensors', []):
+    if tensor in names:
+      for event in event_acc.tensors.Items(tensor):
+        props = dict([(k.name, v) for k, v in event.tensor_proto.ListFields()])
+        props['event'] = event
+        props['tensor'] = tensor
+        yield props
+
+def get_tensors(event_acc, names=['gin/operative_config'], step=None):
+  results = list(sorted(_get_tensors(event_acc, names), key=lambda x: x['event'].step))
+  if step is not None and len(results) > 0:
+    best = None
+    for result in results:
+      if best is None:
+        best = result
+      if result['event'].step <= step:
+        if result['event'].step >= best['event'].step:
+          best = result
+    return best
+  return results
+
+def get_string_val(x, unset=None):
+  if x is None:
+    return unset
+  return x['string_val'][0].decode('utf8')
+
+def get_config(event_acc, step, description=None, match=None, exclude=None):
+  result = get_tensors(event_acc, 'gin/operative_config', step=step)
+  if result is None:
+    return None
+  cfg = get_string_val(result)
+  if cfg is None:
+    cfg = "No config"
+  cfg = cfg.replace('\r', '').replace('\\\n        ', '')
+  cfg = "*config.changed_at_step = {}\n{}".format(result['event'].step, cfg)
+  if match is not None:
+    if exclude is None:
+      exclude = []
+    if not isinstance(match, list):
+      match = [match]
+    if not isinstance(exclude, list):
+      exclude = [exclude]
+    cfg = '\n'.join([x for x in cfg.splitlines() if any([x.lstrip().startswith(y) for y in match]) and not any([x.lstrip().startswith(y) for y in exclude])])
+    return cfg
+  if description is not None:
+    description = " " + description
+  else:
+    description = ""
+  cfg = "{} at step {}{}\n{}".format(result['tensor'], result['event'].step, description, cfg)
+  return cfg
+
+def get_settings(event_acc, step):
+  return [x.strip().split(' = ', 1) for x in get_config(event_acc, step=step, match='', exclude=''.split()).splitlines() if not x.strip().startswith('#') and len(x.strip()) > 0]
+
+def get_settings_diff(event_acc, step, exclude=biggan_defaults):
+  return [(k, v) for k, v in get_settings(event_acc, step) if exclude.get(k) != v or k.startswith('*')]
+
+import json
+
+def get_description(event_acc, step):
+  #result = get_config(event_acc, step=step, match='options', exclude='options.image_ options.transpose_input options.training_steps'.split())
+  result = get_settings_diff(event_acc, step)
+  if result is None:
+    return ""
+  return json.dumps(dict(result))
 
 def get_images(event_acc, name='fake_images_image_0'):
   tags = event_acc.Tags()
@@ -218,6 +204,19 @@ def get_images(event_acc, name='fake_images_image_0'):
               bytes_io = bytearray(s)
               img = Image.open(io.BytesIO(bytes_io))
               yield index, img, event
+
+async def send_message(channel, text):
+    print("Posting message to {}: {}".format(channel.name, text))
+    await channel.send(content=text)
+
+async def send_picture(channel, img, kind='png', name='test', text=None):
+    print("Posting picture to {} with text {}".format(channel.name, text))
+    f = io.BytesIO()
+    img.save(f, kind)
+    f.seek(0)
+    picture = discord.File(f)
+    picture.filename = name + '.' + kind
+    await channel.send(content=text, file=picture)
 
 def bot(channel_name, name='test', kind='png'):
     asyncio.set_event_loop(asyncio.new_event_loop())
