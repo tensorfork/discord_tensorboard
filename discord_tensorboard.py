@@ -11,10 +11,10 @@ from tensorboard.backend.event_processing import event_accumulator
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--logdir", type=str, required=True)
-parser.add_argument("--channel", type=str, required=True)
+parser.add_argument("--channel", type=str, required=False)
 parser.add_argument("--start", type=int, default=0, required=False)
 parser.add_argument("--end", type=int, required=False)
-parser.add_argument("--waitsec", default=240, type=int, required=False)
+parser.add_argument("--waitsec", default=0, type=int, required=False)
 parser.add_argument("--warnsec", default=3600, type=int, required=False)
 parser.add_argument("--logstart", default=None, type=str, required=False)
 args = parser.parse_args()
@@ -39,88 +39,88 @@ def timestamp(utc_seconds):
     return time.strftime("%Y-%m-%d %H:%M:%S PST", time.localtime(utc_seconds))
 
 biggan_defaults = dict([
- ['AdamOptimizer.beta1', '0.0'],
- ['AdamOptimizer.beta2', '0.999'],
- ['AdamOptimizer.epsilon', '1e-08'],
- ['AdamOptimizer.use_locking', 'False'],
- ['BigGanResNetBlock.add_shortcut', 'True'],
- ['conditional_batch_norm.use_bias', 'False'],
- ['cross_replica_moments.group_size', 'None'],
- ['cross_replica_moments.parallel', 'True'],
- ['D.batch_norm_fn', 'None'],
- ['D.layer_norm', 'False'],
- ['D.spectral_norm', 'True'],
+ ['AdamOptimizer.beta1', 0.0],
+ ['AdamOptimizer.beta2', 0.999],
+ ['AdamOptimizer.epsilon', 1e-08],
+ ['AdamOptimizer.use_locking', False],
+ ['BigGanResNetBlock.add_shortcut', True],
+ ['conditional_batch_norm.use_bias', False],
+ ['cross_replica_moments.group_size', None],
+ ['cross_replica_moments.parallel', True],
+ ['D.batch_norm_fn', None],
+ ['D.layer_norm', False],
+ ['D.spectral_norm', True],
  ['dataset.name', ""],
- ['dataset.seed', '547'],
+ ['dataset.seed', 547],
  ['resnet_biggan.Discriminator.blocks_with_attention', ""],
  ['resnet_biggan.Discriminator.ch', ''],
- ['resnet_biggan.Discriminator.channel_multipliers', 'None'],
- ['resnet_biggan.Discriminator.project_y', 'True'],
+ ['resnet_biggan.Discriminator.channel_multipliers', None],
+ ['resnet_biggan.Discriminator.project_y', True],
  ['G.batch_norm_fn', '@conditional_batch_norm'],
- ['G.spectral_norm', 'True'],
+ ['G.spectral_norm', True],
  ['resnet_biggan.Generator.blocks_with_attention', ""],
  ['resnet_biggan.Generator.ch', ''],
- ['resnet_biggan.Generator.channel_multipliers', 'None'],
- ['resnet_biggan.Generator.embed_bias', 'False'],
- ['resnet_biggan.Generator.embed_y', 'True'],
- ['resnet_biggan.Generator.embed_y_dim', '128'],
- ['resnet_biggan.Generator.embed_z', 'False'],
- ['resnet_biggan.Generator.hierarchical_z', 'True'],
+ ['resnet_biggan.Generator.channel_multipliers', None],
+ ['resnet_biggan.Generator.embed_bias', False],
+ ['resnet_biggan.Generator.embed_y', True],
+ ['resnet_biggan.Generator.embed_y_dim', 128],
+ ['resnet_biggan.Generator.embed_z', False],
+ ['resnet_biggan.Generator.hierarchical_z', True],
  ['loss.fn', '@hinge'],
- ['ModularGAN.conditional', 'True'],
+ ['ModularGAN.conditional', True],
  ['ModularGAN.d_lr', ''],
  ['ModularGAN.d_optimizer_fn', '@tf.train.AdamOptimizer'],
- ['ModularGAN.deprecated_split_disc_calls', 'False'],
- ['ModularGAN.ema_decay', '0.9999'],
- ['ModularGAN.ema_start_step', '40000'],
- ['ModularGAN.experimental_force_graph_unroll', 'False'],
- ['ModularGAN.experimental_joint_gen_for_disc', 'False'],
- ['ModularGAN.fit_label_distribution', 'False'],
+ ['ModularGAN.deprecated_split_disc_calls', False],
+ ['ModularGAN.ema_decay', 0.9999],
+ ['ModularGAN.ema_start_step', 40000],
+ ['ModularGAN.experimental_force_graph_unroll', False],
+ ['ModularGAN.experimental_joint_gen_for_disc', False],
+ ['ModularGAN.fit_label_distribution', False],
  ['ModularGAN.g_lr', ''],
  ['ModularGAN.g_optimizer_fn', '@tf.train.AdamOptimizer'],
- ['ModularGAN.g_use_ema', 'True'],
- ['normal.mean', '0.0'],
- ['normal.seed', 'None'],
- ['options.architecture', "'resnet_biggan_arch'"],
+ ['ModularGAN.g_use_ema', True],
+ ['normal.mean', 0.0],
+ ['normal.seed', None],
+ ['options.architecture', 'resnet_biggan_arch'],
  ['options.batch_size', ''],
  ['options.d_flood', ''],
  ['options.datasets', ""],
- ['options.description', "'Describe your GIN config. (This appears in the tensorboard text tab.)'"],
- ['options.disc_iters', '2'],
- ['options.discriminator_normalization', 'None'],
+ ['options.description', 'Describe your GIN config. (This appears in the tensorboard text tab.)'],
+ ['options.disc_iters', 2],
+ ['options.discriminator_normalization', None],
  ['options.g_flood', ''],
  ['options.gan_class', '@ModularGAN'],
  ['options.image_grid_height', '*exclude'],
  ['options.image_grid_resolution', '*exclude'],
  ['options.image_grid_width', '*exclude'],
- ['options.labels', 'None'],
- ['options.lamba', '1'],
+ ['options.labels', None],
+ ['options.lamba', 1],
  ['options.model_dir', "*exclude"],
- ['options.num_classes', '1000'],
+ ['options.num_classes', 1000],
  ['options.random_labels', ''],
- ['options.training_steps', '250000'],
- ['options.transpose_input', 'False'],
+ ['options.training_steps', 250000],
+ ['options.transpose_input', False],
  ['options.z_dim', ''],
  ['penalty.fn', '@no_penalty'],
- ['replace_labels.file_pattern', 'None'],
- ['run_config.iterations_per_loop', '250'],
- ['run_config.keep_checkpoint_every_n_hours', '1'],
- ['run_config.keep_checkpoint_max', '10'],
- ['run_config.save_checkpoints_steps', '250'],
- ['run_config.single_core', 'False'],
- ['run_config.tf_random_seed', 'None'],
- ['spectral_norm.epsilon', '1e-12'],
- ['spectral_norm.singular_value', "'auto'"],
- ['standardize_batch.decay', '0.9'],
- ['standardize_batch.epsilon', '1e-05'],
- ['standardize_batch.use_cross_replica_mean', 'None'],
- ['standardize_batch.use_moving_averages', 'False'],
- ['train_imagenet_transform.crop_method', "'random'"],
- ['weights.initializer', "'orthogonal'"],
+ ['replace_labels.file_pattern', None],
+ ['run_config.iterations_per_loop', 250],
+ ['run_config.keep_checkpoint_every_n_hours', 1],
+ ['run_config.keep_checkpoint_max', 10],
+ ['run_config.save_checkpoints_steps', 250],
+ ['run_config.single_core', False],
+ ['run_config.tf_random_seed', None],
+ ['spectral_norm.epsilon', 1e-12],
+ ['spectral_norm.singular_value', 'auto'],
+ ['standardize_batch.decay', 0.9],
+ ['standardize_batch.epsilon', 1e-05],
+ ['standardize_batch.use_cross_replica_mean', None],
+ ['standardize_batch.use_moving_averages', False],
+ ['train_imagenet_transform.crop_method', 'random'],
+ ['weights.initializer', 'orthogonal'],
  ['z.distribution_fn', '@tf.random.normal'],
- ['z.maxval', '1.0'],
- ['z.minval', '-1.0'],
- ['z.stddev', '1.0']
+ ['z.maxval', 1.0],
+ ['z.minval', -1.0],
+ ['z.stddev', 1.0]
  ])
 
 def _get_tensors(event_acc, names):
@@ -159,9 +159,9 @@ def get_config(event_acc, step, description=None, match=None, exclude=None):
     return None
   cfg = get_string_val(result)
   if cfg is None:
-    cfg = "No config"
+    cfg = "# No config"
   cfg = cfg.replace('\r', '').replace('\\\n        ', '')
-  cfg = "*config.step = {}\n{}".format(result['event'].step, cfg)
+  cfg = "_config.step = {}\n{}".format(result['event'].step, cfg)
   if match is not None:
     if exclude is None:
       exclude = []
@@ -179,7 +179,23 @@ def get_config(event_acc, step, description=None, match=None, exclude=None):
   return cfg
 
 def get_settings(event_acc, step):
+  import pdb; pdb.set_trace()
   return [x.strip().split(' = ', 1) for x in get_config(event_acc, step=step, match='', exclude=''.split()).splitlines() if not x.strip().startswith('#') and len(x.strip()) > 0]
+
+import gin
+
+def _get_settings(event_acc, step):
+  cfg = get_config(event_acc, step=step, match='', exclude=''.split())
+  parser = gin.config_parser.ConfigParser(cfg, gin.config.ParserDelegate(skip_unknown=True))
+  for statement in parser:
+    k = '{}.{}'.format(statement.selector, statement.arg_name)
+    v = statement.value
+    if hasattr(v, 'selector'):
+      v = '@{}'.format(v.selector)
+    yield k, v
+
+def get_settings(event_acc, step):
+  return [x for x in _get_settings(event_acc, step)]
 
 def get_settings_diff(event_acc, step, exclude=biggan_defaults):
   return [(k, v) for k, v in get_settings(event_acc, step) if exclude.get(k) != v and exclude.get(k) != '*exclude' or k.startswith('*')]
@@ -225,12 +241,19 @@ def truncate_text(text, size=3000):
   return text
 
 async def send_message(channel, text):
-    text = truncate_text(text)
+  text = truncate_text(text)
+  if channel is None:
+    print("Posting message: {}".format(text))
+  else:
     print("Posting message to {}: {}".format(channel.name, text))
     await channel.send(content=text)
 
 async def send_picture(channel, img, kind='jpg', name='test', text=None):
-    print("Posting picture to {} with text {}".format(channel.name, truncate_text(text)))
+  text = truncate_text(text)
+  if channel is None:
+    print("Posting picture with text {}".format(text))
+  else:
+    print("Posting picture to {} with text {}".format(channel.name, text))
     f = io.BytesIO()
     if kind.lower() in ['jpg', 'jpeg']:
       if '=' in kind:
@@ -246,7 +269,7 @@ async def send_picture(channel, img, kind='jpg', name='test', text=None):
     picture.filename = name + '.' + kind
     await channel.send(content=text, file=picture)
 
-def bot(channel_name, name='test', kind='jpg'):
+def bot(name='test', kind='jpg'):
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     client = discord.Client()
@@ -260,11 +283,11 @@ def bot(channel_name, name='test', kind='jpg'):
     async def on_ready():
         print('Logged on as {0}!'.format(client.user))
         try:
-          channel = [x for x in list(client.get_all_channels()) if channel_name == x.name]
-          assert len(channel) == 1
-          channel = channel[0]
-          print(channel)
-          import time
+          channel = None if args.channel is None else [x for x in list(client.get_all_channels()) if args.channel == x.name]
+          if channel is not None:
+            assert len(channel) == 1
+            channel = channel[0]
+            print(channel)
 
           warnevent = 0.0
           while True:
@@ -323,4 +346,4 @@ def bot(channel_name, name='test', kind='jpg'):
     #    print('Message from {0.author}: {0.content}'.format(message))
 
     client.run(token)
-bot(args.channel)
+bot()
