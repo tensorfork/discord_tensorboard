@@ -205,12 +205,32 @@ def get_images(event_acc, name='fake_images_image_0'):
               img = Image.open(io.BytesIO(bytes_io))
               yield index, img, event
 
+def truncate_text(text, size=3000):
+  if text is None:
+    return text
+  if len(text) < size:
+    return text
+  code = False
+  n = size - 1
+  m = 0
+  if text.startswith('```') and text.endswith('```'):
+    text = text[3:-3]
+    m = 6
+    code = True
+  text = text[0:max(0, n-m-3)] + '...'
+  if code:
+    text = '```' + text + '```'
+  print(repr(text))
+  assert len(text) < size or size <= 3+m
+  return text
+
 async def send_message(channel, text):
+    text = truncate_text(text)
     print("Posting message to {}: {}".format(channel.name, text))
     await channel.send(content=text)
 
 async def send_picture(channel, img, kind='png', name='test', text=None):
-    print("Posting picture to {} with text {}".format(channel.name, text))
+    print("Posting picture to {} with text {}".format(channel.name, truncate_text(text)))
     f = io.BytesIO()
     img.save(f, kind)
     f.seek(0)
