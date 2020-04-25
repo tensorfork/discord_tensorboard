@@ -301,6 +301,9 @@ def bot(channel_name, name='test', kind='png'):
                   posix._exit(args.start)
                   assert False
                   break
+              print('Reloading events for {}'.format(args.logdir))
+              event_acc.Reload()
+              print('Reloaded events for {}'.format(args.logdir))
         except:
           import traceback
           traceback.print_exc()
