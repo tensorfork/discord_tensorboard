@@ -56,7 +56,7 @@ biggan_defaults = dict([
  ['resnet_biggan.Discriminator.ch', ''],
  ['resnet_biggan.Discriminator.channel_multipliers', 'None'],
  ['resnet_biggan.Discriminator.project_y', 'True'],
- ['G.batch_norm_fn', ''], #'@conditional_batch_norm'],
+ ['G.batch_norm_fn', '@conditional_batch_norm'],
  ['G.spectral_norm', 'True'],
  ['resnet_biggan.Generator.blocks_with_attention', ""],
  ['resnet_biggan.Generator.ch', ''],
@@ -85,7 +85,7 @@ biggan_defaults = dict([
  ['options.batch_size', ''],
  ['options.d_flood', ''],
  ['options.datasets', ""],
- ['options.description', ""],
+ ['options.description', "'Describe your GIN config. (This appears in the tensorboard text tab.)'"],
  ['options.disc_iters', '2'],
  ['options.discriminator_normalization', 'None'],
  ['options.g_flood', ''],
@@ -95,7 +95,7 @@ biggan_defaults = dict([
  ['options.image_grid_width', '32'],
  ['options.labels', 'None'],
  ['options.lamba', '1'],
- ['options.model_dir', ""],
+ ['options.model_dir', "*exclude"],
  ['options.num_classes', '1000'],
  ['options.random_labels', ''],
  ['options.training_steps', '250000'],
@@ -161,7 +161,7 @@ def get_config(event_acc, step, description=None, match=None, exclude=None):
   if cfg is None:
     cfg = "No config"
   cfg = cfg.replace('\r', '').replace('\\\n        ', '')
-  cfg = "*config.changed_at_step = {}\n{}".format(result['event'].step, cfg)
+  cfg = "*config.step = {}\n{}".format(result['event'].step, cfg)
   if match is not None:
     if exclude is None:
       exclude = []
@@ -182,7 +182,7 @@ def get_settings(event_acc, step):
   return [x.strip().split(' = ', 1) for x in get_config(event_acc, step=step, match='', exclude=''.split()).splitlines() if not x.strip().startswith('#') and len(x.strip()) > 0]
 
 def get_settings_diff(event_acc, step, exclude=biggan_defaults):
-  return [(k, v) for k, v in get_settings(event_acc, step) if exclude.get(k) != v or k.startswith('*')]
+  return [(k, v) for k, v in get_settings(event_acc, step) if exclude.get(k) != v and exclude.get(k) != '*exclude' or k.startswith('*')]
 
 import json
 
@@ -273,7 +273,7 @@ def bot(channel_name, name='test', kind='png'):
 
               now = utc()
               if args.warnsec is not None and now - lastevent > args.warnsec and now - warnevent > args.warnsec:
-                  await send_message(channel, text="I've fallen and I can't get up. Please send help. Last event was {:.2f}m ago.".format((now - lastevent)/60.0))
+                  await send_message(channel, text="I've fallen and I can't get up. Please send help for logdir {}. Last update was {:.2f}m ago.".format(args.logdir, (now - lastevent)/60.0))
                   warnevent = now
 
               if args.waitsec is not None and args.waitsec > 0:
