@@ -66,10 +66,14 @@ def _get_tensors(event_acc, names):
 def get_tensors(event_acc, names=['gin/operative_config'], step=None):
   results = list(sorted(_get_tensors(event_acc, names), key=lambda x: x['event'].step))
   if step is not None and len(results) > 0:
+    best = None
     for result in results:
-      if result['event'].step >= step:
-        return result
-    return results[-1]
+      if best is None:
+        best = result
+      if result['event'].step <= step:
+        if result['event'].step >= best['event'].step:
+          best = result
+    return best
   return results
 
 def get_string_val(x, unset=None):
@@ -84,6 +88,8 @@ def get_config(event_acc, step, description=None, match=None, exclude=None):
   cfg = get_string_val(result)
   if cfg is None:
     cfg = "No config"
+  cfg = cfg.replace('\r', '').replace('\\\n        ', '')
+  cfg = "*config.changed_at_step = {}\n{}".format(result['event'].step, cfg)
   if match is not None:
     if exclude is None:
       exclude = []
@@ -102,6 +108,18 @@ def get_config(event_acc, step, description=None, match=None, exclude=None):
 
 def get_settings(event_acc, step):
   return [x.strip().split(' = ', 1) for x in get_config(event_acc, step=step, match='', exclude=''.split()).splitlines() if not x.strip().startswith('#') and len(x.strip()) > 0]
+
+def get_settings_diff(event_acc, step, exclude=biggan_defaults):
+  return [(k, v) for k, v in get_settings(event_acc, step) if exclude.get(k) != v or k.startswith('*')]
+
+import json
+
+def get_description(event_acc, step):
+  #result = get_config(event_acc, step=step, match='options', exclude='options.image_ options.transpose_input options.training_steps'.split())
+  result = get_settings_diff(event_acc, step)
+  if result is None:
+    return ""
+  return json.dumps(dict(result))
 
 biggan_defaults = dict([
  ['AdamOptimizer.beta1', '0.0'],
@@ -188,17 +206,6 @@ biggan_defaults = dict([
  ['z.stddev', '1.0']
  ])
 
-def get_settings_diff(event_acc, step, exclude=biggan_defaults):
-  return [(k, v) for k, v in get_settings(event_acc, step) if exclude.get(k) != v]
-
-import json
-
-def get_description(event_acc, step):
-  #result = get_config(event_acc, step=step, match='options', exclude='options.image_ options.transpose_input options.training_steps'.split())
-  result = get_settings_diff(event_acc, step)
-  if result is None:
-    return ""
-  return json.dumps(dict(result))
 
 def get_images(event_acc, name='fake_images_image_0'):
   tags = event_acc.Tags()
