@@ -200,13 +200,7 @@ def get_description(event_acc, step):
     return ""
   return json.dumps(dict(result))
 
-def get_images(event_acc=None, name='fake_images_image_0'):
-  if event_acc is None:
-    print("Loading event accumulator for {}".format(args.logdir))
-    event_acc = event_accumulator.EventAccumulator(args.logdir, size_guidance={'images': 0})
-  print("Reloading event accumulator for {}".format(args.logdir))
-  event_acc.Reload()
-  print("Finished loading event accumulator for {}".format(args.logdir))
+def get_images(event_acc, name='fake_images_image_0'):
   tags = event_acc.Tags()
   for tag in tags['images']:
       events = event_acc.Images(tag)
@@ -240,7 +234,14 @@ def bot(channel_name, name='test', kind='png'):
           import time
 
           warnevent = 0.0
+          event_acc = None
           while True:
+              if event_acc is None:
+                  print("Loading event accumulator for {}".format(args.logdir))
+                  event_acc = event_accumulator.EventAccumulator(args.logdir, size_guidance={'images': 0})
+              print("Reloading event accumulator for {}".format(args.logdir))
+              event_acc.Reload()
+              print("Finished loading event accumulator for {}".format(args.logdir))
               results = list(sorted([(index, image, event) for index, image, event in get_images(event_acc)]))
 
               lastevent = utc()
