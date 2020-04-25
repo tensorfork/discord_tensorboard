@@ -208,7 +208,6 @@ def get_images(event_acc=None, name='fake_images_image_0'):
   event_acc.Reload()
   print("Finished loading event accumulator for {}".format(args.logdir))
   tags = event_acc.Tags()
-  configs = sorted(get_text(event_acc), key=lambda x: x['event'].step)
   for tag in tags['images']:
       events = event_acc.Images(tag)
       tag_name = tag.replace('/', '_')
@@ -217,11 +216,6 @@ def get_images(event_acc=None, name='fake_images_image_0'):
               s = np.frombuffer(event.encoded_image_string, dtype=np.uint8)
               bytes_io = bytearray(s)
               img = Image.open(io.BytesIO(bytes_io))
-              cfgs = [x for x in configs if x['event'].step >= event.step]
-              if len(cfgs) >= 0:
-                cfg = cfgs[0]
-                cfg.get('string_val', [b''])
-              config = None if len(config) <= 0 else config[0]
               yield index, img, event
 
 def bot(channel_name, name='test', kind='png'):
