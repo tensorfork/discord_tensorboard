@@ -229,7 +229,7 @@ async def send_message(channel, text):
     print("Posting message to {}: {}".format(channel.name, text))
     await channel.send(content=text)
 
-async def send_picture(channel, img, kind='png', name='test', text=None):
+async def send_picture(channel, img, kind='jpg', name='test', text=None):
     print("Posting picture to {} with text {}".format(channel.name, truncate_text(text)))
     f = io.BytesIO()
     img.save(f, kind)
@@ -238,7 +238,7 @@ async def send_picture(channel, img, kind='png', name='test', text=None):
     picture.filename = name + '.' + kind
     await channel.send(content=text, file=picture)
 
-def bot(channel_name, name='test', kind='png'):
+def bot(channel_name, name='test', kind='jpg'):
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     client = discord.Client()
@@ -278,7 +278,7 @@ def bot(channel_name, name='test', kind='png'):
                       if index >= args.start and (args.end is None or index <= args.end):
                           args.start = index + 1
                           try:
-                              await send_picture(channel, image, 'png', text=text)
+                              await send_picture(channel, image, 'jpg', text=text)
                           except:
                               import traceback
                               traceback.print_exc()
