@@ -232,7 +232,15 @@ async def send_message(channel, text):
 async def send_picture(channel, img, kind='jpg', name='test', text=None):
     print("Posting picture to {} with text {}".format(channel.name, truncate_text(text)))
     f = io.BytesIO()
-    img.save(f, kind)
+    if kind.lower() in ['jpg', 'jpeg']:
+      if '=' in kind:
+        kind, quality = kind.split('=')
+        quality = int(quality)
+      else:
+        quality = 95
+      img.save(f, kind, 'JPEG', quality=quality)
+    else:
+      img.save(f, kind)
     f.seek(0)
     picture = discord.File(f)
     picture.filename = name + '.' + kind
