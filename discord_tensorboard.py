@@ -314,6 +314,9 @@ def bot(name='test', kind='jpg'):
                           try:
                               image = get_image_from_event(event)
                               await send_picture(channel, image, 'jpg', text=text)
+                              if args.logstart is not None:
+                                with open(args.logstart, "w") as f:
+                                  f.write(str(args.start))
                           except:
                               import traceback
                               traceback.print_exc()
@@ -329,9 +332,6 @@ def bot(name='test', kind='jpg'):
               else:
                   print("Done. Bye!")
                   print("--start {}".format(args.start))
-                  if args.logstart is not None:
-                    with open(args.logstart, "w") as f:
-                      f.write(str(args.start))
                   import posix
                   posix._exit(args.start)
                   assert False
