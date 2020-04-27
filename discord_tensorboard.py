@@ -209,17 +209,20 @@ def get_description(event_acc, step):
     return ""
   return json.dumps(dict(result))
 
-def get_images(event_acc, name='fake_images_image_0'):
+def get_image_from_event(event):
+  s = np.frombuffer(event.encoded_image_string, dtype=np.uint8)
+  bytes_io = bytearray(s)
+  img = Image.open(io.BytesIO(bytes_io))
+  return img
+
+def get_image_events(event_acc, name='fake_images_image_0'):
   tags = event_acc.Tags()
   for tag in tags['images']:
       events = event_acc.Images(tag)
       tag_name = tag.replace('/', '_')
       if tag_name == name:
           for index, event in enumerate(events):
-              s = np.frombuffer(event.encoded_image_string, dtype=np.uint8)
-              bytes_io = bytearray(s)
-              img = Image.open(io.BytesIO(bytes_io))
-              yield index, img, event
+            yield index, event
 
 def truncate_text(text, size=3000):
   if text is None:
@@ -291,13 +294,13 @@ def bot(name='test', kind='jpg'):
 
           warnevent = 0.0
           while True:
-              results = list(sorted([(index, image, event) for index, image, event in get_images(event_acc)]))
+              results = list(sorted([(index, event) for index, event in get_image_events(event_acc)]))
 
               lastevent = utc()
               start_time = 0.0
 
               with lock:
-                  for index, image, event in results:
+                  for index, event in results:
                       lastevent = event.wall_time
                       if index == 0:
                           start_time = event.wall_time
@@ -309,6 +312,7 @@ def bot(name='test', kind='jpg'):
                       if index >= args.start and (args.end is None or index <= args.end):
                           args.start = index + 1
                           try:
+                              image = get_image_from_event(event)
                               await send_picture(channel, image, 'jpg', text=text)
                           except:
                               import traceback
