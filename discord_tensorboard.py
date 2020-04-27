@@ -15,7 +15,7 @@ parser.add_argument("--channel", type=str, required=False)
 parser.add_argument("--start", type=int, default=0, required=False)
 parser.add_argument("--end", type=int, required=False)
 parser.add_argument("--waitsec", default=0, type=int, required=False)
-parser.add_argument("--warnsec", default=3600, type=int, required=False)
+parser.add_argument("--warnsec", default=None, type=int, required=False)
 parser.add_argument("--logstart", default=None, type=str, required=False)
 args = parser.parse_args()
 discord_token = os.environ['DISCORD_TOKEN']
@@ -319,7 +319,7 @@ def bot(name='test', kind='jpg'):
                               traceback.print_exc()
 
               now = utc()
-              if args.warnsec is not None and now - lastevent > args.warnsec and now - warnevent > args.warnsec:
+              if args.warnsec is not None and args.warnsec > 0 and now - lastevent > args.warnsec and now - warnevent > args.warnsec:
                   await send_message(channel, text="I've fallen and I can't get up. Please send help for logdir {}. Last update was {:.2f}m ago.".format(args.logdir, (now - lastevent)/60.0))
                   warnevent = now
 
