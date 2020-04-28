@@ -295,6 +295,7 @@ def bot(name='test', kind='jpg'):
           warnevent = 0.0
           while True:
               results = list(sorted([(index, event) for index, event in get_image_events(event_acc)]))
+              emas = dict([(event.step, event) for index, event in get_image_events(event_acc, 'fake_images_ema_image_0')])
 
               lastevent = utc()
               start_time = 0.0
@@ -312,6 +313,11 @@ def bot(name='test', kind='jpg'):
                       if index >= args.start and (args.end is None or index <= args.end):
                           args.start = index + 1
                           try:
+                              ema = emas.get(event.step)
+                              if ema is not None:
+                                ema_image = get_image_from_event(ema)
+                                await send_picture(channel, ema_image, 'jpg', text=text)
+                                text = None
                               image = get_image_from_event(event)
                               await send_picture(channel, image, 'jpg', text=text)
                               if args.logstart is not None:
