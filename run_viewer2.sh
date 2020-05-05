@@ -29,7 +29,7 @@ trap "kill -9 0" SIGINT
 while true; do
         [ -z $start ] && exit 1
         [ $start -lt $prev ] && exit 1
-        timeout --signal=SIGKILL 7h bash run_viewer.sh --logdir $logdir --channel $channel --waitsec 0 --logstart $logfile --start $start "$@"
+        timeout --signal=SIGKILL 7h bash ~/discord_tensorboard/run_viewer.sh --logdir $logdir --channel $channel --waitsec 0 --logstart $logfile --start $start "$@"
         prev=$start
         start=`cat $logfile`
         echo $logfile
