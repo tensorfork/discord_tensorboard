@@ -156,19 +156,28 @@ def get_string_val(x, unset=None):
 import tensorflow as tf
 from natsort import natsorted
 
-def search_config(logdir):
+def search_config(logdir, step=None):
+  logdir = logdir.rstrip('/')
   r = list(natsorted([x for x in tf.io.gfile.listdir(logdir) if x.endswith('.gin')]))
-  if len(r) > 0:
-    gin_file = r[-1]
+  best_filename = None
+  for x in r:
+    try:
+      gin_step = int(x.split('-')[-1].split('.')[0])
+    except ValueError:
+      continue
+    if step is None or gin_step <= step:
+      best_filename = x
+  if best_filename is not None:
+    gin_file = best_filename
     with tf.io.gfile.GFile(os.path.join(logdir, gin_file)) as f:
       return f.read()
 
 def get_config(event_acc, step, description=None, match=None, exclude=None):
   result = get_tensors(event_acc, 'gin/operative_config', step=step)
   if result is None or len(result) <= 0:
-    cfg = search_config(args.logdir.rstrip('/'))
+    cfg = search_config(args.logdir.rstrip('/'), step=step)
     if cfg is None:
-      cfg = search_config(os.path.dirname(args.logdir.rstrip('/')))
+      cfg = search_config(os.path.dirname(args.logdir.rstrip('/')), step=step)
     if cfg is None:
       return None
     return cfg
@@ -320,12 +329,14 @@ def bot(name='test', kind='jpg'):
                       lastevent = event.wall_time
                       if index == 0:
                           start_time = event.wall_time
-                      desc = get_description(event_acc, step=event.step)
-                      if len(desc.strip()) > 0:
-                        desc = '\n' + desc.strip()
-                      text = "```#{} step {} elapsed {:.2f}m\n{}\n{}{}```".format(index, event.step, (event.wall_time - start_time)/60.0, timestamp(event.wall_time), args.logdir, desc)
+                      text = "```#{} step {} elapsed {:.2f}m```".format(index, event.step, (event.wall_time - start_time)/60.0)
                       print(text)
                       if index >= args.start and (args.end is None or index <= args.end):
+                          desc = get_description(event_acc, step=event.step)
+                          if len(desc.strip()) > 0:
+                            desc = '\n' + desc.strip()
+                          text = "```#{} step {} elapsed {:.2f}m\n{}\n{}{}```".format(index, event.step, (event.wall_time - start_time)/60.0, timestamp(event.wall_time), args.logdir, desc)
+                          print(text)
                           args.start = index + 1
                           try:
                               ema = emas.get(event.step)
