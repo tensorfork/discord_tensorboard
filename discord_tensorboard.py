@@ -166,9 +166,9 @@ def search_config(logdir):
 def get_config(event_acc, step, description=None, match=None, exclude=None):
   result = get_tensors(event_acc, 'gin/operative_config', step=step)
   if result is None or len(result) <= 0:
-    cfg = search_config(args.logdir)
+    cfg = search_config(args.logdir.rstrip('/'))
     if cfg is None:
-      cfg = search_config(os.path.dirname(args.logdir))
+      cfg = search_config(os.path.dirname(args.logdir.rstrip('/')))
     if cfg is None:
       return None
     return cfg
