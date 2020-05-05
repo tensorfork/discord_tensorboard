@@ -155,7 +155,7 @@ def get_string_val(x, unset=None):
 
 def get_config(event_acc, step, description=None, match=None, exclude=None):
   result = get_tensors(event_acc, 'gin/operative_config', step=step)
-  if result is None:
+  if result is None or len(result) <= 0:
     return None
   cfg = get_string_val(result)
   if cfg is None:
@@ -205,7 +205,7 @@ import json
 def get_description(event_acc, step):
   #result = get_config(event_acc, step=step, match='options', exclude='options.image_ options.transpose_input options.training_steps'.split())
   result = get_settings_diff(event_acc, step)
-  if result is None:
+  if result is None or len(result) <= 0:
     return ""
   return json.dumps(dict(result))
 
