@@ -153,10 +153,25 @@ def get_string_val(x, unset=None):
     return unset
   return x['string_val'][0].decode('utf8')
 
+import tensorflow as tf
+from natsort import natsorted
+
+def search_config(logdir):
+  r = list(natsorted([x for x in tf.io.gfile.listdir(logdir) if x.endswith('.gin')]))
+  if len(r) > 0:
+    gin_file = r[-1]
+    with tf.io.gfile.GFile(os.path.join(logdir, gin_file)) as f:
+      return f.read()
+
 def get_config(event_acc, step, description=None, match=None, exclude=None):
   result = get_tensors(event_acc, 'gin/operative_config', step=step)
   if result is None or len(result) <= 0:
-    return None
+    cfg = search_config(args.logdir)
+    if cfg is None:
+      cfg = search_config(os.path.dirname(args.logdir))
+    if cfg is None:
+      return None
+    return cfg
   cfg = get_string_val(result)
   if cfg is None:
     cfg = "# No config"
