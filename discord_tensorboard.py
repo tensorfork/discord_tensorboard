@@ -301,6 +301,7 @@ def bot(name='test', kind='jpg'):
     loop = asyncio.get_event_loop()
     client = discord.Client()
     token = discord_token
+    state = {}
 
     print("Loading event accumulator")
     event_acc = event_accumulator.EventAccumulator(args.logdir, size_guidance={'images': 0})
@@ -308,6 +309,12 @@ def bot(name='test', kind='jpg'):
 
     @client.event
     async def on_ready():
+        if lock.locked() or 'logged_in' in state:
+          print('Tried to log in again; terminating.')
+          import posix
+          posix._exit(1)
+          assert False
+        state['logged_in'] = True
         print('Logged on as {0}!'.format(client.user))
         try:
           channel = None if args.channel is None else [x for x in list(client.get_all_channels()) if args.channel == x.name]
